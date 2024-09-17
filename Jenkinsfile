@@ -31,7 +31,6 @@ pipeline {
 
         stage('Restore .NET Packages') {
             steps {
-                // Use bash to avoid 'Bad substitution' error
                 sh '''
                     #!/bin/bash
                     dotnet restore ./src/DevOpsChallenge.SalesApi/DevOpsChallenge.SalesApi.csproj
@@ -41,7 +40,6 @@ pipeline {
 
         stage('Build .NET Application') {
             steps {
-                // Use bash to avoid 'Bad substitution' error
                 sh '''
                     #!/bin/bash
                     dotnet publish ./src/DevOpsChallenge.SalesApi/DevOpsChallenge.SalesApi.csproj -c Release
@@ -51,7 +49,6 @@ pipeline {
 
         stage('Publish .NET Application') {
             steps {
-                // Use bash to avoid 'Bad substitution' error
                 sh '''
                     #!/bin/bash
                     dotnet publish ./src/DevOpsChallenge.SalesApi/DevOpsChallenge.SalesApi.csproj -c Release -o ./publish
@@ -69,7 +66,6 @@ pipeline {
 
         stage('Trivy Scan') {
             steps {
-                // Use bash to avoid 'Bad substitution' error
                 sh '''
                     #!/bin/bash
                     trivy image ${DOCKER_REPO_NAME}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
