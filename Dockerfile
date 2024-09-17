@@ -1,5 +1,13 @@
-# Use the .NET 5 runtime image to run the application
 FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+
+RUN useradd -m appuser
+
 WORKDIR /app
-COPY ./publish ./
+
+USER appuser
+
+COPY --chown=appuser:appuser ./publish /app
+
+EXPOSE 5236
+
 ENTRYPOINT ["dotnet", "DevOpsChallenge.SalesApi.dll"]
