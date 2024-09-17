@@ -1,0 +1,98 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/JanithGunasekara/dotnet-challenge.git'
+        GIT_BRANCH = 'main'
+        DOCKER_CREDENTIALS_ID = 'docker-hub'
+        DOCKER_IMAGE_NAME = 'salesappapi'
+        DOCKER_REPO_NAME = 'janith1997'
+    }
+
+    stages {
+        stage('Get Image Tag from User') {
+            steps {
+                script {
+                    env.DOCKER_IMAGE_TAG = input(
+                        id: 'dockerImageTag',
+                        message: 'Please enter the Docker image tag:',
+                        parameters: [string(defaultValue: 'latest', description: 'Tag for the Docker image', name: 'IMAGE_TAG')]
+                    )
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                // Clone the Git repo
+                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Restore .NET Packages') {
+            steps {
+                sh '''
+                    #!/bin/bash
+                    dotnet restore ./src/DevOpsChallenge.SalesApi/DevOpsChallenge.SalesApi.csproj
+                '''
+            }
+        }
+
+        stage('Build .NET Application') {
+            steps {
+                sh '''
+                    #!/bin/bash
+                    dotnet publish ./src/DevOpsChallenge.SalesApi/DevOpsChallenge.SalesApi.csproj -c Release
+                '''
+            }
+        }
+
+        stage('Publish .NET Application') {
+            steps {
+                sh '''
+                    #!/bin/bash
+                    dotnet publish ./src/DevOpsChallenge.SalesApi/DevOpsChallenge.SalesApi.csproj -c Release -o ./publish
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def app = docker.build("${DOCKER_REPO_NAME}/${DOCKER_IMAGE_NAME}:${env.DOCKER_IMAGE_TAG}")
+                }
+            }
+        }
+        
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([string(credentialsId: 'docker-pwd', variable: 'dockerhubpwd')]) {
+                    sh '''
+                        #!/bin/bash
+                        docker login -u janith1997 -p ${dockerhubpwd}
+                    '''
+                }
+            }
+        }
+
+        stage('Push Docker Image to Registry') {
+            steps {
+                script {
+                    sh '''
+                        #!/bin/bash
+                        docker push ${DOCKER_REPO_NAME}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Docker image built and pushed successfully!'
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }
+}
