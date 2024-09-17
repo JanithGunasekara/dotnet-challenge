@@ -1,0 +1,310 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "DotNetApp Prod VPC"
+############################################ Name Mappings
+Parameters:
+  Az1:
+    Type: String
+    Default: ap-southeast-1a
+  Az2:
+    Type: String
+    Default: ap-southeast-1b
+  EnvironmentName:
+    Type: String
+    Default: DotNetAppProd
+  
+Mappings:
+  SubnetMap:
+    VPC:
+#Primary private CIDR block
+      CIDRBlock01: "172.xx.xx.xx/xx"
+
+#Private subnets
+    PrivateSubnet01:
+      CIDR: "172.xx.xx.xx/xx"
+      AZ: "1"
+    PrivateSubnet02:
+      CIDR: "172.xx.xx.xx/xx"
+      AZ: "2"
+    PrivateSubnet03:
+      CIDR: "172.xx.xx.xx/xx"
+      AZ: "3"
+#Transit gateway attachment
+    TransitGatewayAttachment:
+      TransitGatewayID: tgw-xxxxxxxxxxxxxxx
+  
+  Names:
+    VPC:
+      Name: "DotNetApp-Production"
+      ShortName: "DotNetAppProd"
+    Environment:
+      Name: Prod-01
+    Product:
+      Name: DotNetApp
+
+  AZRegions:
+    ap-southeast-1:
+      AZs: ["a", "b", "c"]
+
+Resources:
+  DotNetAppVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap [SubnetMap, VPC, CIDRBlock01]
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+        - Key: Name
+          Value: !FindInMap [ Names, VPC, Name ]
+  VpcCidrBlock:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      VpcId: !Ref DotNetAppVPC
+      CidrBlock: !FindInMap [SubnetMap, VPC, CIDRBlock02]
+
+  ####################PrivateSubnets########################
+  PrivateSubnet01:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !FindInMap [SubnetMap, PrivateSubnet01, CIDR]
+      VpcId: !Ref DotNetAppVPC
+      Tags:
+        - Key: Name
+          Value: !Join 
+              - '-'
+              - - !FindInMap [ Names, VPC, ShortName ]
+                - "PrivateSub01"
+
+  PrivateSubnet02:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !FindInMap [SubnetMap, PrivateSubnet02, CIDR]
+      VpcId: !Ref DotNetAppVPC
+      Tags:
+        - Key: Name
+          Value: !Join 
+              - '-'
+              - - !FindInMap [ Names, VPC, ShortName ]
+                - "PrivateSub02"
+
+  PrivateSubnet03:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select
+        - 2
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !FindInMap [SubnetMap, PrivateSubnet03, CIDR]
+      VpcId: !Ref DotNetAppVPC
+      Tags:
+        - Key: Name
+          Value: !Join 
+              - '-'
+              - - !FindInMap [ Names, VPC, ShortName ]
+                - "PrivateSub03"
+
+
+  ######################EIPS For NGW###################
+  NatGatewayEIP01:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Join 
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "NgwEIP01"
+
+  NatGatewayEIP02:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Join 
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "NgwEIP02"
+  
+  NatGatewayEIP03:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Join 
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "NgwEIP03"
+
+  #####################NGW###########################
+  NatGateway01:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: !Ref PublicSubnet01
+      AllocationId: !GetAtt 'NatGatewayEIP01.AllocationId'
+      Tags:
+        - Key: Name
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "Ngw01"
+
+  NatGateway02:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: !Ref PublicSubnet01
+      AllocationId: !GetAtt 'NatGatewayEIP02.AllocationId'
+      Tags:
+        - Key: Name
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "Ngw02"
+
+  NatGateway03:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: !Ref PublicSubnet01
+      AllocationId: !GetAtt 'NatGatewayEIP03.AllocationId'
+      Tags:
+        - Key: Name
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "Ngw0"
+
+
+###################Transit Gateway Attachment#########
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    Properties:
+      TransitGatewayId: !FindInMap [ SubnetMap, TransitGatewayAttachment, TransitGatewayID ]
+      VpcId: !Ref DotNetAppVPC
+      SubnetIds:
+        - !Ref PrivateSubnet01
+        - !Ref PrivateSubnet02
+        - !Ref PrivateSubnet03
+      Tags:
+        - Key: Name
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "TGWA"
+
+##################RouteTable#####################
+  PrivateRouteTable01:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref DotNetAppVPC
+      Tags:
+        - Key: Name 
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "PrivateRouteTable01"
+
+  PrivateRouteTable02:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref DotNetAppVPC
+      Tags:
+        - Key: Name 
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "PrivateRouteTable02"
+
+  PrivateRouteTable03:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref DotNetAppVPC
+      Tags:
+        - Key: Name 
+          Value: !Join
+             - '-'
+             - - !FindInMap [ Names, VPC, ShortName ]
+               - "PrivateRouteTable03"
+
+##########Route Table Associations - Private######
+  PrivateSub01RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+         RouteTableId: !Ref PrivateRouteTable01
+         SubnetId: !Ref PrivateSubnet01
+
+  PrivateSub02RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+         RouteTableId: !Ref PrivateRouteTable02
+         SubnetId: !Ref PrivateSubnet02
+
+  PrivateSub03RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+        RouteTableId: !Ref PrivateRouteTable03
+        SubnetId: !!Ref PrivateSubnet03
+
+#################Routes################### NGW routes to private subnets
+
+  NGWRoute01:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable01
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway01
+
+  NGWRoute02:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable02
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway02
+
+  NGWRoute03:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable03
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway03
+
+Outputs:
+  VpcId:
+    Description: VPC ID
+    Value: !Ref DotNetAppVPC
+    Export:
+      Name: DotNetAppVPC
+
+  PrivateSubnet1Id:
+    Description: Private Subnet ID1
+    Value: !Ref PrivateSubnet01
+    Export:
+      Name: PrivateSubnet01
+    
+  PrivateSubnet2Id:
+    Description: Private Subnet ID2
+    Value: !Ref PrivateSubnet03
+    Export:
+      Name: PrivateSubnet02
+
+  PrivateSubnet3Id:
+    Description: Private Subnet ID2
+    Value: !Ref PrivateSubnet02
+    Export:
+      Name: PrivateSubnet03
+
+  EnvironmentName:
+    Value: !Ref EnvironmentName
+    Description: Environment Name
+    Export:
+      Name: !Sub "${EnvironmentName}"
