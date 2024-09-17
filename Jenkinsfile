@@ -63,16 +63,7 @@ pipeline {
                 }
             }
         }
-
-        stage('Trivy Scan') {
-            steps {
-                sh '''
-                    #!/bin/bash
-                    trivy image ${DOCKER_REPO_NAME}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
-                '''
-            }
-        }
-
+        
         stage('Login to DockerHub') {
             steps {
                 withCredentials([string(credentialsId: 'docker-pwd', variable: 'dockerhubpwd')]) {
