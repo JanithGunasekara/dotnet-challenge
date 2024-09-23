@@ -16,6 +16,9 @@ Resources:
       CapacityProviders:
         - FARGATE
         - FARGATE_SPOT
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
       DefaultCapacityProviderStrategy:
         - CapacityProvider: FARGATE
           Weight: 1
