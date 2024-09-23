@@ -75,6 +75,12 @@ Resources:
       Protocol: HTTP
 
 Outputs:
+
+  LoadBalancer:
+    Value: !Ref ALB
+    Export:
+      Name: DotNetAppLoadBalancer
+
   DotNetAppTargetGroup:
     Value: !Ref DotNetAppTargetGroup
     Export:

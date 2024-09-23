@@ -11,6 +11,9 @@ Parameters:
   ClusterName:
     Type: String
     Default: '!ImportValue ClusterName'
+  DotNetAppLoadBalancer:
+    Type: String
+    Default: '!ImportValue DotNetAppLoadBalancer'
   DotNetAppTargetGroup:
     Type: String
     Default: '!ImportValue DotNetAppTargetGroup'
@@ -48,6 +51,7 @@ Resources:
       LoadBalancers:
         - ContainerName: Service1
           ContainerPort: 8081
+          LoadBalancerName: !Ref DotNetAppLoadBalancer
           TargetGroupArn: !Ref DotNetAppTargetGroup
       DesiredCount: 3
       DeploymentConfiguration:

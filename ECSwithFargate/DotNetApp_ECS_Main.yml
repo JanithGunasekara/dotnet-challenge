@@ -38,6 +38,7 @@ Resources:
         PrivateSubnet2Id: !GetAtt 'VpcStack.Outputs.PrivateSubnet2Id'
         DotNetAppTargetGroup: !GetAtt 'ECSALBStack.Outputs.DotNetAppTargetGroup'
         DotNetAppALBSecurityGroup: !GetAtt 'ECSALBStack.Outputs.DotNetAppALBSecurityGroup'
+        DotNetAppLoadBalancer: !GetAtt 'ECSALBStack.Outputs.DotNetAppLoadBalancer'
 
   ECSALBStack:
     Type: AWS::CloudFormation::Stack
