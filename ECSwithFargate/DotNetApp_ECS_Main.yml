@@ -36,7 +36,8 @@ Resources:
         VpcId: !GetAtt 'VpcStack.Outputs.VpcId'
         PrivateSubnet1Id: !GetAtt 'VpcStack.Outputs.PrivateSubnet1Id'
         PrivateSubnet2Id: !GetAtt 'VpcStack.Outputs.PrivateSubnet2Id'
-        ServiceTargetGroup: !GetAtt 'ECSALBStack.Outputs.ServiceTargetGroup'
+        DotNetAppTargetGroup: !GetAtt 'ECSALBStack.Outputs.DotNetAppTargetGroup'
+        DotNetAppALBSecurityGroup: !GetAtt 'ECSALBStack.Outputs.DotNetAppALBSecurityGroup'
 
   ECSALBStack:
     Type: AWS::CloudFormation::Stack

@@ -41,7 +41,7 @@ Resources:
   DotNetAppALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP traffic
+      GroupDescription: Allow HTTP/HTTPS traffic
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -79,3 +79,8 @@ Outputs:
     Value: !Ref DotNetAppTargetGroup
     Export:
       Name: DotNetAppTargetGroup
+
+  DotNetAppALBSecurityGroup:
+    Value: !Ref DotNetAppALBSecurityGroup
+    Export:
+      Name: DotNetAppALBSecurityGroup
