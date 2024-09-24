@@ -58,7 +58,7 @@ Resources:
         DeploymentCircuitBreaker:
           Enable: true
           Rollback: true
-      TaskDefinition: !Ref TDService1
+      TaskDefinition: !Ref DotNetECSTaskDefinition
 
   DotNetECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
